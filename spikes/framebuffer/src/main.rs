@@ -1,7 +1,7 @@
 extern crate bmp;
 extern crate framebuffer;
 
-use framebuffer::{Framebuffer};
+use framebuffer::{Framebuffer, KdMode};
 
 fn main() {
     let mut framebuffer = Framebuffer::new("/dev/fb0").unwrap();
@@ -16,6 +16,9 @@ fn main() {
     let mut frame = vec![0u8; (line_length * h) as usize];
     let img = bmp::open("rust-logo.bmp").unwrap();
 
+    //Disable text mode in tty1
+    let _ = Framebuffer::set_kd_mode_ex("/dev/tty1", KdMode::Graphics).unwrap();
+
     for offset in 0..w - img.get_width() {
         for (x, y) in img.coordinates() {
             let px = img.get_pixel(x, y);
@@ -27,4 +30,7 @@ fn main() {
 
         let _ = framebuffer.write_frame(&frame);
     }
+
+    //Reenable text mode in tty1
+    let _ = Framebuffer::set_kd_mode_ex("/dev/tty1", KdMode::Text).unwrap();
 }
